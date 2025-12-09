@@ -19,6 +19,11 @@ const repos: ContextRepo[] = [
     remote: "https://github.com/sveltejs/esrap.git",
     branch: "main",
   },
+  {
+    name: "node-dbus-next",
+    remote: "https://github.com/dbusjs/node-dbus-next.git",
+    branch: "master",
+  },
 ]
 
 for (const repo of repos) {

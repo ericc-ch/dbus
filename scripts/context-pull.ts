@@ -12,7 +12,10 @@ interface ContextRepo {
   branch: string
 }
 
-const repos: ContextRepo[] = [{ name: "esrap", branch: "main" }]
+const repos: ContextRepo[] = [
+  { name: "esrap", branch: "main" },
+  { name: "node-dbus-next", branch: "master" },
+]
 
 for (const repo of repos) {
   const contextDir = path.join(rootDir, ".context", repo.name)
