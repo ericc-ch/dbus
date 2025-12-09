@@ -566,12 +566,6 @@ module.exports["org.freedesktop.Notifications"] = function (bus) {
 
 A MITM proxy for inspecting D-Bus traffic between clients and the bus.
 
-> **Note:** This tool requires additional dependencies (`abstract-socket`, `through2`) that are not included in the package. Install them manually:
->
-> ```shell
-> npm install abstract-socket through2
-> ```
-
 **Usage:**
 
 ```shell

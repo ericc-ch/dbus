@@ -3,7 +3,7 @@
 Install deps: `bun install`.
 Lint: `bun run lint` (oxlint).
 Format: `bun run format` (prettier).
-Tests: `bun test`.
+Tests: `bun test` (unit) or `bun run test:docker` (integration with D-Bus).
 Single file: `bun test test/unmarshall-basic.test.ts`.
 Filter by name: `bun test --test-name-pattern "pattern"`.
 Test files: `test/*.test.ts` (TypeScript, ES imports, bun:test).
