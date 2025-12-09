@@ -41,7 +41,8 @@
   "scripts": {
     "format": "prettier --write .",
     "lint": "oxlint",
-    "test:docker": "docker build -t dbus-native-test . && docker run --rm dbus-native-test"
+    "docker:build": "docker build -t dbus-native-test .",
+    "docker:test": "docker run --rm dbus-native-test"
   },
   "dependencies": {
     "event-stream": "^4.0.1",
