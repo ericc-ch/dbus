@@ -1,5 +1,4 @@
-Dbus proxy / web client example
-========================
+# Dbus proxy / web client example
 
 TODO: add docs
 

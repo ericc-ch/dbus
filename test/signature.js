@@ -1,4 +1,4 @@
-describe('Signature parser', function () {
+describe("Signature parser", function () {
   //beforeEach(function(done) {
   //});
   //afterEach(function(done) {
@@ -7,4 +7,4 @@ describe('Signature parser', function () {
   //  var res = parse('yvsgu');
   //  // TODO: wip
   //});
-});
+})

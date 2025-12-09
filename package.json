@@ -1,7 +1,7 @@
 {
   "name": "@echristian/dbus-native",
-  "author": "Andrey Sidorov <sidorares@yandex.com>",
   "version": "0.7.2",
+  "description": "D-bus protocol implementation in native javascript",
   "keywords": [
     "dbus",
     "dcop",
@@ -10,7 +10,27 @@
     "gnome",
     "kde"
   ],
-  "description": "D-bus protocol implementation in native javascript",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ericc-ch/dbus-native.git"
+  },
+  "license": "MIT",
+  "author": "Andrey Sidorov <sidorares@yandex.com>",
+  "maintainers": [
+    {
+      "name": "Andrey Sidorov",
+      "email": "sidoares@yandex.ru"
+    }
+  ],
+  "main": "index.js",
+  "bin": {
+    "dbus2js": "bin/dbus2js.js"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "test",
+    "examples": "examples"
+  },
   "files": [
     "bin/dbus2js.js",
     "lib/*",
@@ -18,25 +38,12 @@
     "package.json",
     "index.d.ts"
   ],
-  "directories": {
-    "lib": "lib",
-    "test": "test",
-    "examples": "examples"
-  },
-  "main": "index.js",
-  "maintainers": [
-    {
-      "name": "Andrey Sidorov",
-      "email": "sidoares@yandex.ru"
-    }
-  ],
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ericc-ch/dbus-native.git"
-  },
-  "bin": {
-    "dbus2js": "bin/dbus2js.js"
+  "scripts": {
+    "format": "prettier --write .",
+    "lint": "bun run lint:docs && bun run lint:code",
+    "lint:code": "eslint index.js 'bin/*.js' 'lib/**/*.js' 'test/**/*.js'",
+    "lint:docs": "eslint 'examples/**/*.js'",
+    "test": "mocha"
   },
   "dependencies": {
     "event-stream": "^4.0.1",
@@ -54,12 +61,5 @@
     "mocha": "^11.7.1",
     "nyc": "^17.1.0",
     "prettier": "^3.7.4"
-  },
-  "scripts": {
-    "lint": "bun run lint:docs && bun run lint:code",
-    "lint:code": "eslint index.js 'bin/*.js' 'lib/**/*.js' 'test/**/*.js'",
-    "lint:docs": "eslint 'examples/**/*.js'",
-    "test": "mocha",
-    "prettier": "prettier --write ."
   }
 }
