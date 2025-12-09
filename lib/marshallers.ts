@@ -1,16 +1,15 @@
 import { Buffer } from "node:buffer"
-import { align } from "./align"
+import { align, type PutStream as BasePutStream } from "./align"
 import Long from "long"
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const parseSignature = require("../lib/signature")
 
-interface PutStream {
-  _offset: number
-  put(buf: Buffer): PutStream
-  word8(val: number): PutStream
-  word16le(val: number): PutStream
-  word32le(val: number): PutStream
+interface PutStream extends BasePutStream {
+  put(buffer: Buffer): PutStream
+  word8(value: number): PutStream
+  word16le(value: number): PutStream
+  word32le(value: number): PutStream
 }
 
 interface Marshaller {
