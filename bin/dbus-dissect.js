@@ -1,16 +1,28 @@
+#!/usr/bin/env node
+
 // simple script to monitor incoming/outcoming dbus messages
 // needs a lot of cleanup but does the job
 
 const net = require("net")
 const { PassThrough } = require("stream")
-const minimist = require("minimist")
+const yargs = require("yargs/yargs")
+const { hideBin } = require("yargs/helpers")
 const message = require("../lib/message")
 const readLine = require("../lib/readline")
+
+const argv = yargs(hideBin(process.argv))
+  .option("system", {
+    type: "boolean",
+    default: false,
+    description: "Connect to system bus instead of session bus",
+  })
+  .help()
+  .parseSync()
 
 var sessionBusAddress = process.env.DBUS_SESSION_BUS_ADDRESS
 var m = sessionBusAddress.match(/abstract=([^,]+)/)
 
-var isSystemBus = minimist(process.argv.slice(2), { boolean: "system" }).system
+var isSystemBus = argv.system
 console.log(isSystemBus)
 
 var address = isSystemBus ? "/var/run/dbus/system_bus_socket" : `\0${m[1]}`
