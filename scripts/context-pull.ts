@@ -1,21 +1,12 @@
 #!/usr/bin/env bun
 import path from "node:path"
 import fs from "node:fs"
+import { repos } from "./context-setup"
 
 const rootDir = path.join(import.meta.dir, "..")
 const gitRoot = await Bun.$`git rev-parse --show-toplevel`
   .text()
   .then((s) => s.trim())
-
-interface ContextRepo {
-  name: string
-  branch: string
-}
-
-const repos: ContextRepo[] = [
-  { name: "esrap", branch: "main" },
-  { name: "node-dbus-next", branch: "master" },
-]
 
 for (const repo of repos) {
   const contextDir = path.join(rootDir, ".context", repo.name)
