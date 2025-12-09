@@ -1,6 +1,6 @@
-FROM oven/bun:debian
+FROM oven/bun:alpine
 
-RUN apt-get update && apt-get install -y --no-install-recommends dbus && rm -rf /var/lib/apt/lists/*
+RUN apk --no-cache add dbus
 
 WORKDIR /app
 
