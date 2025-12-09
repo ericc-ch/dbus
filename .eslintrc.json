@@ -1,14 +1,9 @@
 {
-  "extends": [
-    "eslint:recommended",
-    "prettier"
-  ],
+  "extends": ["eslint:recommended"],
   "parserOptions": {
     "ecmaVersion": 6
   },
-  "plugins": [
-    "markdown"
-  ],
+  "plugins": ["markdown"],
   "rules": {
     "no-constant-condition": ["error", { "checkLoops": false }],
     "eqeqeq": ["error", "always"],
