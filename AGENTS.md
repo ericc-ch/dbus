@@ -1,5 +1,3 @@
-# AGENTS
-
 Install deps: `bun install`.
 Lint: `bun run lint` (oxlint).
 Format: `bun run format` (prettier).
