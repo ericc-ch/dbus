@@ -4,8 +4,7 @@ import fs from "node:fs"
 import path from "node:path"
 import type { Duplex } from "node:stream"
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const constants = require("./constants")
+import constants from "./constants"
 import readLine from "./readline"
 
 function sha1(input: string) {
@@ -75,7 +74,7 @@ export default function auth(
   if (opts.authMethods) {
     authMethods = opts.authMethods
   } else {
-    authMethods = constants.defaultAuthMethods
+    authMethods = [...constants.defaultAuthMethods]
   }
   stream.write("\0")
   tryAuth(stream, authMethods.slice(), cb)

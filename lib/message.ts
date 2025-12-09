@@ -3,8 +3,7 @@ import type { Readable } from "node:stream"
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const marshallData = require("./marshall")
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const constants = require("./constants")
+import constants from "./constants"
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const DBusBuffer = require("./dbus-buffer")
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -57,13 +56,14 @@ export function unmarshalMessages(
           fieldsLength,
         )
         messageBuffer.align(3)
-        var headerName: string
         var message: DBusMessage = {}
         message.serial = header!.readUInt32LE(8)
 
         for (var i = 0; i < unmarshalledHeader.length; ++i) {
-          headerName = constants.headerTypeName[unmarshalledHeader[i][0]]
-          message[headerName] = unmarshalledHeader[i][1][1][0]
+          var headerName = constants.headerTypeName[unmarshalledHeader[i][0]]
+          if (headerName) {
+            message[headerName] = unmarshalledHeader[i][1][1][0]
+          }
         }
 
         message.type = header!.readUInt8(1)
@@ -86,7 +86,9 @@ export function unmarshall(buff: Buffer, opts?: UnmarshalOpts) {
   var message: DBusMessage = {}
   for (var i = 0; i < headers[6].length; ++i) {
     var headerName = constants.headerTypeName[headers[6][i][0]]
-    message[headerName] = headers[6][i][1][1][0]
+    if (headerName) {
+      message[headerName] = headers[6][i][1][1][0]
+    }
   }
   message.type = headers[1]
   message.flags = headers[2]
@@ -116,7 +118,8 @@ export function marshall(message: DBusMessage) {
   ]
   var headerBuff: Buffer = marshallData("yyyyuu", header)
   var fields: unknown[] = []
-  constants.headerTypeName.forEach(function (fieldName: string) {
+  constants.headerTypeName.forEach(function (fieldName) {
+    if (!fieldName) return
     var fieldVal = message[fieldName]
     if (fieldVal) {
       fields.push([
