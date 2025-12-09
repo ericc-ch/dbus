@@ -1,9 +1,7 @@
 import { Buffer } from "node:buffer"
 import { align, type PutStream as BasePutStream } from "./align"
 import Long from "long"
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const parseSignature = require("../lib/signature")
+import parseSignature from "./signature"
 
 interface PutStream extends BasePutStream {
   put(buffer: Buffer): PutStream

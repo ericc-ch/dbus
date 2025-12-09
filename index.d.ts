@@ -1,6 +1,8 @@
 import { EventEmitter } from "events"
 import { Socket } from "net"
 
+export { DBusTypeCode, SignatureNode, parseSignature } from "./lib/signature"
+
 export function systemBus(): MessageBus
 
 export class MessageBus {
