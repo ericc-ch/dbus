@@ -849,3 +849,11 @@ const bus: dbus.MessageBus = dbus.sessionBus()
 - [Original dbus-native](https://github.com/sidorares/dbus-native)
 - [Homebridge fork](https://github.com/homebridge/dbus-native)
 - [Long.js](https://github.com/dcodeIO/long.js) - 64-bit integer support
+
+---
+
+## Credits
+
+This package is a fork of [@homebridge/dbus-native](https://github.com/homebridge/dbus-native), which itself is a fork of the original [dbus-native](https://github.com/sidorares/dbus-native) by **Andrey Sidorov**.
+
+Thanks to all the original contributors for their work on this library.
