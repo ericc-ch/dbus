@@ -40,10 +40,7 @@
   ],
   "scripts": {
     "format": "prettier --write .",
-    "lint": "bun run lint:docs && bun run lint:code",
-    "lint:code": "eslint index.js 'bin/*.js' 'lib/**/*.js' 'test/**/*.js'",
-    "lint:docs": "eslint 'examples/**/*.js'",
-    "test": "mocha"
+    "lint": "oxlint"
   },
   "dependencies": {
     "event-stream": "^4.0.1",
@@ -58,8 +55,7 @@
     "@types/minimist": "^1.2.5",
     "eslint": "^8.57.1",
     "eslint-plugin-markdown": "^5.1.0",
-    "mocha": "^11.7.1",
-    "nyc": "^17.1.0",
+    "oxlint": "^1.32.0",
     "prettier": "^3.7.4"
   }
 }
