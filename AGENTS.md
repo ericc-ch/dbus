@@ -10,5 +10,6 @@ Test files: `test/*.test.ts` (TypeScript, ES imports, bun:test).
 No semicolons; descriptive names (short loop indexes ok).
 Error handling: fail fast, pass errors up with context.
 Types: keep `index.d.ts` aligned with JS exports.
+ESM: all new code must be ESM-only (no CommonJS).
 Commits: conventional commits, all lowercase, concise, no body, break changes into small commits.
 Always run `bun run lint` and `bun test` after making changes to ensure nothing breaks.
