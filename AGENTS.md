@@ -19,3 +19,4 @@ Use semicolons/single quotes; avoid trailing commas; descriptive names (short lo
 Error handling: fail fast, pass errors up with context.
 Types: keep `index.d.ts` aligned with JS exports.
 Pre-commit: lint-staged runs prettier on staged `.js`.
+Commits: conventional commits, all lowercase, concise, no body, break changes into small commits.
