@@ -37,6 +37,6 @@
     "forceConsistentCasingInFileNames": true,
 
     // Advanced
-    "erasableSyntaxOnly": true,
-  },
+    "erasableSyntaxOnly": true
+  }
 }
