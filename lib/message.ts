@@ -1,24 +1,44 @@
-const Buffer = require("safe-buffer").Buffer
-const marshall = require("./marshall")
-const constants = require("./constants")
-const DBusBuffer = require("./dbus-buffer")
+import { Buffer } from "node:buffer"
+import type { Readable } from "node:stream"
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const marshallData = require("./marshall")
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const constants = require("./constants")
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const DBusBuffer = require("./dbus-buffer")
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const headerSignature = require("./header-signature.json")
 
-module.exports.unmarshalMessages = function messageParser(
-  stream,
-  onMessage,
-  opts,
+interface DBusMessage {
+  serial?: number
+  type?: number
+  flags?: number
+  signature?: string
+  body?: unknown[]
+  [key: string]: unknown
+}
+
+interface UnmarshalOpts {
+  ReturnLongjs?: boolean
+}
+
+export function unmarshalMessages(
+  stream: Readable,
+  onMessage: (message: DBusMessage) => void,
+  opts?: UnmarshalOpts,
 ) {
   var state = 0 // 0: header, 1: fields + body
-  var header, fieldsAndBody
-  var fieldsLength, fieldsLengthPadded
+  var header: Buffer | null
+  var fieldsAndBody: Buffer | null
+  var fieldsLength: number
+  var fieldsLengthPadded: number
   var fieldsAndBodyLength = 0
   var bodyLength = 0
   stream.on("readable", function () {
     while (true) {
       if (state === 0) {
-        header = stream.read(16)
+        header = stream.read(16) as Buffer | null
         if (!header) break
         state = 1
 
@@ -27,7 +47,7 @@ module.exports.unmarshalMessages = function messageParser(
         bodyLength = header.readUInt32LE(4)
         fieldsAndBodyLength = fieldsLengthPadded + bodyLength
       } else {
-        fieldsAndBody = stream.read(fieldsAndBodyLength)
+        fieldsAndBody = stream.read(fieldsAndBodyLength) as Buffer | null
         if (!fieldsAndBody) break
         state = 0
 
@@ -37,17 +57,17 @@ module.exports.unmarshalMessages = function messageParser(
           fieldsLength,
         )
         messageBuffer.align(3)
-        var headerName
-        var message = {}
-        message.serial = header.readUInt32LE(8)
+        var headerName: string
+        var message: DBusMessage = {}
+        message.serial = header!.readUInt32LE(8)
 
         for (var i = 0; i < unmarshalledHeader.length; ++i) {
           headerName = constants.headerTypeName[unmarshalledHeader[i][0]]
           message[headerName] = unmarshalledHeader[i][1][1][0]
         }
 
-        message.type = header[1]
-        message.flags = header[2]
+        message.type = header!.readUInt8(1)
+        message.flags = header!.readUInt8(2)
 
         if (bodyLength > 0 && message.signature) {
           message.body = messageBuffer.read(message.signature)
@@ -60,10 +80,10 @@ module.exports.unmarshalMessages = function messageParser(
 
 // given buffer which contains entire message deserialise it
 // TODO: factor out common code
-module.exports.unmarshall = function unmarshall(buff, opts) {
+export function unmarshall(buff: Buffer, opts?: UnmarshalOpts) {
   var msgBuf = new DBusBuffer(buff, undefined, opts)
   var headers = msgBuf.read("yyyyuua(yv)")
-  var message = {}
+  var message: DBusMessage = {}
   for (var i = 0; i < headers[6].length; ++i) {
     var headerName = constants.headerTypeName[headers[6][i][0]]
     message[headerName] = headers[6][i][1][1][0]
@@ -76,14 +96,14 @@ module.exports.unmarshall = function unmarshall(buff, opts) {
   return message
 }
 
-module.exports.marshall = function marshallMessage(message) {
+export function marshall(message: DBusMessage) {
   if (!message.serial) throw new Error("Missing or invalid serial")
   var flags = message.flags || 0
   var type = message.type || constants.messageType.methodCall
   var bodyLength = 0
-  var bodyBuff
+  var bodyBuff: Buffer | undefined
   if (message.signature && message.body) {
-    bodyBuff = marshall(message.signature, message.body)
+    bodyBuff = marshallData(message.signature, message.body) as Buffer
     bodyLength = bodyBuff.length
   }
   var header = [
@@ -94,9 +114,9 @@ module.exports.marshall = function marshallMessage(message) {
     bodyLength,
     message.serial,
   ]
-  var headerBuff = marshall("yyyyuu", header)
-  var fields = []
-  constants.headerTypeName.forEach(function (fieldName) {
+  var headerBuff: Buffer = marshallData("yyyyuu", header)
+  var fields: unknown[] = []
+  constants.headerTypeName.forEach(function (fieldName: string) {
     var fieldVal = message[fieldName]
     if (fieldVal) {
       fields.push([
@@ -105,13 +125,19 @@ module.exports.marshall = function marshallMessage(message) {
       ])
     }
   })
-  var fieldsBuff = marshall("a(yv)", [fields], 12)
+  var fieldsBuff: Buffer = marshallData("a(yv)", [fields], 12)
   var headerLenAligned = ((headerBuff.length + fieldsBuff.length + 7) >> 3) << 3
   var messageLen = headerLenAligned + bodyLength
   var messageBuff = Buffer.alloc(messageLen)
   headerBuff.copy(messageBuff)
   fieldsBuff.copy(messageBuff, headerBuff.length)
-  if (bodyLength > 0) bodyBuff.copy(messageBuff, headerLenAligned)
+  if (bodyLength > 0) bodyBuff!.copy(messageBuff, headerLenAligned)
 
   return messageBuff
+}
+
+export default {
+  unmarshalMessages,
+  unmarshall,
+  marshall,
 }

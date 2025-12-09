@@ -1,11 +1,11 @@
-import { Buffer } from "safe-buffer"
+import { Buffer } from "node:buffer"
 import { describe, test, expect } from "bun:test"
 import Long from "long"
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const marshall = require("../lib/marshall")
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const unmarshall = require("../lib/unmarshall")
+const unmarshall = require("../lib/unmarshall").default
 
 interface UnmarshallOptions {
   ReturnLongjs?: boolean

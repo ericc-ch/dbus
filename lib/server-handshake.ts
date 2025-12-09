@@ -1,7 +1,16 @@
-const Buffer = require("safe-buffer").Buffer
-const readLine = require("./readline")
+import { Buffer } from "node:buffer"
+import type { Duplex } from "node:stream"
+import readLine from "./readline"
 
-module.exports = function serverHandshake(stream, opts, cb) {
+interface ServerHandshakeOpts {
+  // Currently unused but kept for API compatibility
+}
+
+export default function serverHandshake(
+  stream: Duplex & { name?: string },
+  _opts: ServerHandshakeOpts,
+  cb: (error: null) => void,
+) {
   stream.name = "SERVER SERVER"
   readLine(stream, function (hello) {
     console.log(["hello string: ", hello.toString(), hello])

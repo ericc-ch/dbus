@@ -1,7 +1,23 @@
-const Buffer = require("safe-buffer").Buffer
-const align = require("./align").align
+import { Buffer } from "node:buffer"
+import { align } from "./align"
+import Long from "long"
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const parseSignature = require("../lib/signature")
-const Long = require("long")
+
+interface PutStream {
+  _offset: number
+  put(buf: Buffer): PutStream
+  word8(val: number): PutStream
+  word16le(val: number): PutStream
+  word32le(val: number): PutStream
+}
+
+interface Marshaller {
+  check: (data: unknown) => unknown
+  marshall: (ps: PutStream, data: unknown) => void
+}
+
 /**
  * MakeSimpleMarshaller
  * @param signature - the signature of the data you want to check
@@ -10,9 +26,9 @@ const Long = require("long")
  * check returns nothing - it only raises errors if the data is
  * invalid for the signature
  */
-var MakeSimpleMarshaller = function (signature) {
-  var marshaller = {}
-  function checkValidString(data) {
+export var MakeSimpleMarshaller = function (signature: string): Marshaller {
+  var marshaller = {} as Marshaller
+  function checkValidString(data: unknown) {
     if (typeof data !== "string") {
       throw new Error(`Data: ${data} was not of type string`)
     } else if (data.indexOf("\0") !== -1) {
@@ -20,7 +36,7 @@ var MakeSimpleMarshaller = function (signature) {
     }
   }
 
-  function checkValidSignature(data) {
+  function checkValidSignature(data: string) {
     if (data.length > 0xff) {
       throw new Error(
         `Data: ${data} is too long for signature type (${data.length} > 255)`,
@@ -62,7 +78,7 @@ var MakeSimpleMarshaller = function (signature) {
         this.check(data)
         // utf8 string
         align(ps, 4)
-        const buff = Buffer.from(data, "utf8")
+        const buff = Buffer.from(data as string, "utf8")
         ps.word32le(buff.length).put(buff).word8(0)
         ps._offset += 5 + buff.length
       }
@@ -71,13 +87,15 @@ var MakeSimpleMarshaller = function (signature) {
       //SIGNATURE
       marshaller.check = function (data) {
         checkValidString(data)
-        checkValidSignature(data)
+        checkValidSignature(data as string)
       }
       marshaller.marshall = function (ps, data) {
         this.check(data)
         // signature
-        const buff = Buffer.from(data, "ascii")
-        ps.word8(data.length).put(buff).word8(0)
+        const buff = Buffer.from(data as string, "ascii")
+        ps.word8((data as string).length)
+          .put(buff)
+          .word8(0)
         ps._offset += 2 + buff.length
       }
       break
@@ -85,11 +103,11 @@ var MakeSimpleMarshaller = function (signature) {
       //BYTE
       marshaller.check = function (data) {
         checkInteger(data)
-        checkRange(0x00, 0xff, data)
+        checkRange(0x00, 0xff, data as number)
       }
       marshaller.marshall = function (ps, data) {
         this.check(data)
-        ps.word8(data)
+        ps.word8(data as number)
         ps._offset++
       }
       break
@@ -101,9 +119,9 @@ var MakeSimpleMarshaller = function (signature) {
       marshaller.marshall = function (ps, data) {
         this.check(data)
         // booleans serialised as 0/1 unsigned 32 bit int
-        data = data ? 1 : 0
+        var val = data ? 1 : 0
         align(ps, 4)
-        ps.word32le(data)
+        ps.word32le(val)
         ps._offset += 4
       }
       break
@@ -111,13 +129,13 @@ var MakeSimpleMarshaller = function (signature) {
       //INT16
       marshaller.check = function (data) {
         checkInteger(data)
-        checkRange(-0x7fff - 1, 0x7fff, data)
+        checkRange(-0x7fff - 1, 0x7fff, data as number)
       }
       marshaller.marshall = function (ps, data) {
         this.check(data)
         align(ps, 2)
         const buff = Buffer.alloc(2)
-        buff.writeInt16LE(parseInt(data), 0)
+        buff.writeInt16LE(parseInt(data as string), 0)
         ps.put(buff)
         ps._offset += 2
       }
@@ -126,12 +144,12 @@ var MakeSimpleMarshaller = function (signature) {
       //UINT16
       marshaller.check = function (data) {
         checkInteger(data)
-        checkRange(0, 0xffff, data)
+        checkRange(0, 0xffff, data as number)
       }
       marshaller.marshall = function (ps, data) {
         this.check(data)
         align(ps, 2)
-        ps.word16le(data)
+        ps.word16le(data as number)
         ps._offset += 2
       }
       break
@@ -139,13 +157,13 @@ var MakeSimpleMarshaller = function (signature) {
       //INT32
       marshaller.check = function (data) {
         checkInteger(data)
-        checkRange(-0x7fffffff - 1, 0x7fffffff, data)
+        checkRange(-0x7fffffff - 1, 0x7fffffff, data as number)
       }
       marshaller.marshall = function (ps, data) {
         this.check(data)
         align(ps, 4)
         const buff = Buffer.alloc(4)
-        buff.writeInt32LE(parseInt(data), 0)
+        buff.writeInt32LE(parseInt(data as string), 0)
         ps.put(buff)
         ps._offset += 4
       }
@@ -154,13 +172,13 @@ var MakeSimpleMarshaller = function (signature) {
       //UINT32
       marshaller.check = function (data) {
         checkInteger(data)
-        checkRange(0, 0xffffffff, data)
+        checkRange(0, 0xffffffff, data as number)
       }
       marshaller.marshall = function (ps, data) {
         this.check(data)
         // 32 t unsigned int
         align(ps, 4)
-        ps.word32le(data)
+        ps.word32le(data as number)
         ps._offset += 4
       }
       break
@@ -170,10 +188,10 @@ var MakeSimpleMarshaller = function (signature) {
         return checkLong(data, false)
       }
       marshaller.marshall = function (ps, data) {
-        data = this.check(data)
+        var longData = this.check(data) as Long
         align(ps, 8)
-        ps.word32le(data.low)
-        ps.word32le(data.high)
+        ps.word32le(longData.low)
+        ps.word32le(longData.high)
         ps._offset += 8
       }
       break
@@ -183,10 +201,10 @@ var MakeSimpleMarshaller = function (signature) {
         return checkLong(data, true)
       }
       marshaller.marshall = function (ps, data) {
-        data = this.check(data)
+        var longData = this.check(data) as Long
         align(ps, 8)
-        ps.word32le(data.low)
-        ps.word32le(data.high)
+        ps.word32le(longData.low)
+        ps.word32le(longData.high)
         ps._offset += 8
       }
       break
@@ -205,7 +223,7 @@ var MakeSimpleMarshaller = function (signature) {
         this.check(data)
         align(ps, 8)
         const buff = Buffer.alloc(8)
-        buff.writeDoubleLE(parseFloat(data), 0)
+        buff.writeDoubleLE(parseFloat(data as string), 0)
         ps.put(buff)
         ps._offset += 8
       }
@@ -215,15 +233,14 @@ var MakeSimpleMarshaller = function (signature) {
   }
   return marshaller
 }
-exports.MakeSimpleMarshaller = MakeSimpleMarshaller
 
-var checkRange = function (minValue, maxValue, data) {
+var checkRange = function (minValue: number, maxValue: number, data: number) {
   if (data > maxValue || data < minValue) {
     throw new Error("Number outside range")
   }
 }
 
-var checkInteger = function (data) {
+var checkInteger = function (data: unknown) {
   if (typeof data !== "number") {
     throw new Error(`Data: ${data} was not of type number`)
   }
@@ -232,14 +249,20 @@ var checkInteger = function (data) {
   }
 }
 
-var checkBoolean = function (data) {
+var checkBoolean = function (data: unknown) {
   if (!(typeof data === "boolean" || data === 0 || data === 1))
     throw new Error(`Data: ${data} was not of type boolean`)
 }
 
+interface LongLike {
+  low: number
+  high: number
+  unsigned: boolean
+}
+
 // This is essentially a tweaked version of 'fromValue' from Long.js with error checking.
 // This can take number or string of decimal characters or 'Long' instance (or Long-style object with props low,high,unsigned).
-var makeLong = function (val, signed) {
+var makeLong = function (val: unknown, signed: boolean): Long {
   if (val instanceof Long) return val
   if (val instanceof Number) val = val.valueOf()
   if (typeof val === "number") {
@@ -252,40 +275,42 @@ var makeLong = function (val, signed) {
         checkRange(0, 0x1fffffffffffff, val)
       }
     } catch (e) {
-      e.message += " (Number type can only carry 53 bit integer)"
+      ;(e as Error).message += " (Number type can only carry 53 bit integer)"
       throw e
     }
     try {
       return Long.fromNumber(val, !signed)
     } catch (e) {
-      e.message = `Error converting number to 64bit integer "${e.message}"`
+      ;(e as Error).message =
+        `Error converting number to 64bit integer "${(e as Error).message}"`
       throw e
     }
   }
   if (typeof val === "string" || val instanceof String) {
     var radix = 10
-    val = val.trim().toUpperCase() // remove extra whitespace and make uppercase (for hex)
-    if (val.substring(0, 2) === "0X") {
+    var strVal = val.toString().trim().toUpperCase() // remove extra whitespace and make uppercase (for hex)
+    if (strVal.substring(0, 2) === "0X") {
       radix = 16
-      val = val.substring(2)
-    } else if (val.substring(0, 3) === "-0X") {
+      strVal = strVal.substring(2)
+    } else if (strVal.substring(0, 3) === "-0X") {
       // unusual, but just in case?
       radix = 16
-      val = `-${val.substring(3)}`
+      strVal = `-${strVal.substring(3)}`
     }
-    val = val.replace(/^0+(?=\d)/, "") // dump leading zeroes
-    var data
+    strVal = strVal.replace(/^0+(?=\d)/, "") // dump leading zeroes
+    var data: Long
     try {
-      data = Long.fromString(val, !signed, radix)
+      data = Long.fromString(strVal, !signed, radix)
     } catch (e) {
-      e.message = `Error converting string to 64bit integer '${e.message}'`
+      ;(e as Error).message =
+        `Error converting string to 64bit integer '${(e as Error).message}'`
       throw e
     }
     // If string represents a number outside of 64 bit range, it can quietly overflow.
     // We assume if things converted correctly the string coming out of Long should match what went into it.
-    if (data.toString(radix).toUpperCase() !== val)
+    if (data.toString(radix).toUpperCase() !== strVal)
       throw new Error(
-        `Data: '${val}' did not convert correctly to ${
+        `Data: '${strVal}' did not convert correctly to ${
           signed ? "signed" : "unsigned"
         } 64 bit`,
       )
@@ -293,38 +318,43 @@ var makeLong = function (val, signed) {
   }
   // Throws for non-objects, converts non-instanceof Long:
   try {
-    return Long.fromBits(val.low, val.high, val.unsigned)
+    var longLike = val as LongLike
+    return Long.fromBits(longLike.low, longLike.high, longLike.unsigned)
   } catch (e) {
-    e.message = `Error converting object to 64bit integer '${e.message}'`
+    ;(e as Error).message =
+      `Error converting object to 64bit integer '${(e as Error).message}'`
     throw e
   }
 }
 
-var checkLong = function (data, signed) {
+var checkLong = function (data: unknown, signed: boolean): Long {
+  var longData: Long
   if (!Long.isLong(data)) {
-    data = makeLong(data, signed)
+    longData = makeLong(data, signed)
+  } else {
+    longData = data
   }
 
   // Do we enforce that Long.js object unsigned/signed match the field even if it is still in range?
   // Probably, might help users avoid unintended bugs?
   if (signed) {
-    if (data.unsigned)
+    if (longData.unsigned)
       throw new Error(
         "Longjs object is unsigned, but marshalling into signed 64 bit field",
       )
-    if (data.gt(Long.MAX_VALUE) || data.lt(Long.MIN_VALUE)) {
-      throw new Error(`Data: ${data} was out of range (64-bit signed)`)
+    if (longData.gt(Long.MAX_VALUE) || longData.lt(Long.MIN_VALUE)) {
+      throw new Error(`Data: ${longData} was out of range (64-bit signed)`)
     }
   } else {
-    if (!data.unsigned)
+    if (!longData.unsigned)
       throw new Error(
         "Longjs object is signed, but marshalling into unsigned 64 bit field",
       )
     // NOTE: data.gt(Long.MAX_UNSIGNED_VALUE) will catch if Long.js object is a signed value but is still within unsigned range!
     //  Since we are enforcing signed type matching between Long.js object and field, this note should not matter.
-    if (data.gt(Long.MAX_UNSIGNED_VALUE) || data.lt(0)) {
-      throw new Error(`Data: ${data} was out of range (64-bit unsigned)`)
+    if (longData.gt(Long.MAX_UNSIGNED_VALUE) || longData.lt(0)) {
+      throw new Error(`Data: ${longData} was out of range (64-bit unsigned)`)
     }
   }
-  return data
+  return longData
 }

@@ -1,12 +1,14 @@
-const Buffer = require("safe-buffer").Buffer
-const crypto = require("crypto")
-const fs = require("fs")
-const path = require("path")
+import { Buffer } from "node:buffer"
+import crypto from "node:crypto"
+import fs from "node:fs"
+import path from "node:path"
+import type { Duplex } from "node:stream"
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const constants = require("./constants")
-const readLine = require("./readline")
+import readLine from "./readline"
 
-function sha1(input) {
+function sha1(input: string) {
   var shasum = crypto.createHash("sha1")
   shasum.update(input)
   return shasum.digest("hex")
@@ -16,9 +18,13 @@ function getUserHome() {
   return process.env[process.platform.match(/$win/) ? "USERPROFILE" : "HOME"]
 }
 
-function getCookie(context, id, cb) {
+function getCookie(
+  context: string,
+  id: string,
+  cb: (err: Error | null, cookie?: string) => void,
+) {
   // http://dbus.freedesktop.org/doc/dbus-specification.html#auth-mechanisms-sha
-  var dirname = path.join(getUserHome(), ".dbus-keyrings")
+  var dirname = path.join(getUserHome()!, ".dbus-keyrings")
   // > There is a default context, "org_freedesktop_general" that's used by servers that do not specify otherwise.
   if (context.length === 0) context = "org_freedesktop_general"
 
@@ -33,7 +39,7 @@ function getCookie(context, id, cb) {
         ),
       )
     // eslint-disable-next-line no-prototype-builtins
-    if (process.hasOwnProperty("getuid") && stat.uid !== process.getuid())
+    if (process.hasOwnProperty("getuid") && stat.uid !== process.getuid!())
       return cb(
         new Error(
           "Keyrings directory is not owned by the current user. Aborting authentication!",
@@ -43,7 +49,7 @@ function getCookie(context, id, cb) {
       if (err) return cb(err)
       var lines = keyrings.split("\n")
       for (var l = 0; l < lines.length; ++l) {
-        var data = lines[l].split(" ")
+        var data = lines[l]!.split(" ")
         if (id === data[0]) return cb(null, data[2])
       }
       return cb(new Error("cookie not found"))
@@ -51,13 +57,21 @@ function getCookie(context, id, cb) {
   })
 }
 
-function hexlify(input) {
+function hexlify(input: string | number) {
   return Buffer.from(input.toString(), "ascii").toString("hex")
 }
 
-module.exports = function auth(stream, opts, cb) {
+interface AuthOpts {
+  authMethods?: string[]
+}
+
+export default function auth(
+  stream: Duplex,
+  opts: AuthOpts,
+  cb: (err: Error | Buffer | null, guid?: string) => void,
+) {
   // filter used to make a copy so we don't accidently change opts data
-  var authMethods
+  var authMethods: string[]
   if (opts.authMethods) {
     authMethods = opts.authMethods
   } else {
@@ -67,14 +81,18 @@ module.exports = function auth(stream, opts, cb) {
   tryAuth(stream, authMethods.slice(), cb)
 }
 
-function tryAuth(stream, methods, cb) {
+function tryAuth(
+  stream: Duplex,
+  methods: string[],
+  cb: (err: Error | Buffer | null, guid?: string) => void,
+) {
   if (methods.length === 0) {
     return cb(new Error("No authentication methods left to try"))
   }
 
   var authMethod = methods.shift()
   // eslint-disable-next-line no-prototype-builtins
-  var uid = process.hasOwnProperty("getuid") ? process.getuid() : 0
+  var uid = process.hasOwnProperty("getuid") ? process.getuid!() : 0
   var id = hexlify(uid)
 
   function beginOrNextAuth() {
@@ -85,7 +103,7 @@ function tryAuth(stream, methods, cb) {
         return cb(null, ok[2]) // ok[2] = guid. Do we need it?
       } else {
         // TODO: parse error!
-        if (!methods.empty) {
+        if (methods.length > 0) {
           tryAuth(stream, methods, cb)
         } else {
           return cb(line)
@@ -102,11 +120,11 @@ function tryAuth(stream, methods, cb) {
     case "DBUS_COOKIE_SHA1":
       stream.write(`AUTH ${authMethod} ${id}\r\n`)
       readLine(stream, function (line) {
-        var data = Buffer.from(line.toString().split(" ")[1].trim(), "hex")
+        var data = Buffer.from(line.toString().split(" ")[1]!.trim(), "hex")
           .toString()
           .split(" ")
-        var cookieContext = data[0]
-        var cookieId = data[1]
+        var cookieContext = data[0]!
+        var cookieId = data[1]!
         var serverChallenge = data[2]
         // any random 16 bytes should work, sha1(rnd) to make it simplier
         var clientChallenge = crypto.randomBytes(16).toString("hex")

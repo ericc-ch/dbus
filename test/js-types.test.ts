@@ -3,7 +3,7 @@ import { describe, test, expect } from "bun:test"
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const marshall = require("../lib/marshall")
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const unmarshall = require("../lib/unmarshall")
+const unmarshall = require("../lib/unmarshall").default
 
 function testRoundtrip(signature: string, data: unknown): void {
   const marshalledBuffer = marshall(signature, data)
