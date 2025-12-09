@@ -2,7 +2,7 @@
 // needs a lot of cleanup but does the job
 
 const net = require("net")
-const through2 = require("through2")
+const { PassThrough } = require("stream")
 const minimist = require("minimist")
 const message = require("../lib/message")
 const readLine = require("../lib/readline")
@@ -47,8 +47,8 @@ net
     cli.write(buff)
     cli.pipe(s)
 
-    var cc = through2()
-    var ss = through2()
+    var cc = new PassThrough()
+    var ss = new PassThrough()
 
     // TODO: pipe? streams1 and streams2 here
     cli.on("data", function (b) {
