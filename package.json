@@ -1,5 +1,5 @@
 {
-  "name": "@echristian/dbus-native",
+  "name": "@echristian/dbus",
   "version": "0.0.0",
   "description": "D-bus protocol implementation in native javascript",
   "keywords": [
@@ -10,11 +10,11 @@
     "gnome",
     "kde"
   ],
-  "homepage": "https://github.com/ericc-ch/dbus-native",
-  "bugs": "https://github.com/ericc-ch/dbus-native/issues",
+  "homepage": "https://github.com/ericc-ch/dbus",
+  "bugs": "https://github.com/ericc-ch/dbus/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ericc-ch/dbus-native.git"
+    "url": "https://github.com/ericc-ch/dbus.git"
   },
   "license": "MIT",
   "author": {
