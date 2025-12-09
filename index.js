@@ -1,14 +1,17 @@
 // dbus.freedesktop.org/doc/dbus-specification.html
 
-const EventEmitter = require("events").EventEmitter
-const net = require("net")
+import { EventEmitter } from "events"
+import net from "net"
+import { spawn } from "child_process"
 
-const constants = require("./lib/constants")
-const message = require("./lib/message")
-const clientHandshake = require("./lib/handshake")
-const serverHandshake = require("./lib/server-handshake")
-const MessageBus = require("./lib/bus")
-const server = require("./lib/server")
+import { Duplex } from "node:stream"
+
+import constants from "./lib/constants"
+import message from "./lib/message"
+import clientHandshake from "./lib/handshake"
+import serverHandshake from "./lib/server-handshake"
+import MessageBus from "./lib/bus"
+import server from "./lib/server"
 
 function createStream(opts) {
   if (opts.stream) return opts.stream
@@ -48,13 +51,11 @@ function createStream(opts) {
             "not enough parameters for 'unix' connection - you need to specify 'socket' or 'abstract' or 'path' parameter",
           )
         case "unixexec":
-          var eventStream = require("event-stream")
-          var spawn = require("child_process").spawn
           var args = []
           for (var n = 1; params["arg" + n]; n++) args.push(params["arg" + n])
           var child = spawn(params.path, args)
 
-          return eventStream.duplex(child.stdin, child.stdout)
+          return Duplex.from({ writable: child.stdin, readable: child.stdout })
         default:
           throw new Error("unknown address type:" + family)
       }
@@ -131,24 +132,32 @@ function createConnection(opts) {
   return self
 }
 
-module.exports.createClient = function (params) {
+export function createClient(params) {
   var connection = createConnection(params || {})
   return new MessageBus(connection, params || {})
 }
 
-module.exports.systemBus = function () {
-  return module.exports.createClient({
+export function systemBus() {
+  return createClient({
     busAddress:
       process.env.DBUS_SYSTEM_BUS_ADDRESS
       || "unix:path=/var/run/dbus/system_bus_socket",
   })
 }
 
-module.exports.sessionBus = function (opts) {
-  return module.exports.createClient(opts)
+export function sessionBus(opts) {
+  return createClient(opts)
 }
 
-module.exports.messageType = constants.messageType
-module.exports.createConnection = createConnection
+export const messageType = constants.messageType
+export { createConnection }
+export const createServer = server.createServer
 
-module.exports.createServer = server.createServer
+export default {
+  createClient,
+  systemBus,
+  sessionBus,
+  messageType,
+  createConnection,
+  createServer,
+}
