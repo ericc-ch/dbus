@@ -1,5 +1,7 @@
 import { describe, test, expect, afterEach } from "bun:test"
 
+import type { DBusInterface, DBusCallback } from "../lib/introspect"
+
 const dbus = require("../index.js")
 
 describe("connection", () => {
@@ -21,13 +23,13 @@ describe("connection", () => {
         "org.freedesktop.DBus",
         "/org/freedesktop/DBus",
         "org.freedesktop.DBus",
-        (err: Error | null, iface: any) => {
+        (err: Error | null, iface: DBusInterface) => {
           if (err) return reject(err)
 
-          iface.ListNames((err: Error | null, names: string[]) => {
+          iface.call("ListNames", [], ((err, names) => {
             if (err) return reject(err)
-            resolve(names)
-          })
+            resolve(names as string[])
+          }) as DBusCallback)
         },
       )
     })
@@ -45,13 +47,13 @@ describe("connection", () => {
         "org.freedesktop.DBus",
         "/org/freedesktop/DBus",
         "org.freedesktop.DBus",
-        (err: Error | null, iface: any) => {
+        (err: Error | null, iface: DBusInterface) => {
           if (err) return reject(err)
 
-          iface.GetId((err: Error | null, id: string) => {
+          iface.call("GetId", [], ((err, id) => {
             if (err) return reject(err)
-            resolve(id)
-          })
+            resolve(id as string)
+          }) as DBusCallback)
         },
       )
     })
@@ -69,16 +71,16 @@ describe("connection", () => {
         "org.freedesktop.DBus",
         "/org/freedesktop/DBus",
         "org.freedesktop.DBus",
-        (err: Error | null, iface: any) => {
+        (err: Error | null, iface: DBusInterface) => {
           if (err) return reject(err)
 
-          iface.NameHasOwner(
-            "org.freedesktop.DBus",
-            (err: Error | null, hasOwner: boolean) => {
-              if (err) return reject(err)
-              resolve(hasOwner)
-            },
-          )
+          iface.call("NameHasOwner", ["org.freedesktop.DBus"], ((
+            err,
+            hasOwner,
+          ) => {
+            if (err) return reject(err)
+            resolve(hasOwner as boolean)
+          }) as DBusCallback)
         },
       )
     })

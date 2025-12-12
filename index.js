@@ -12,6 +12,7 @@ import clientHandshake from "./lib/handshake"
 import serverHandshake from "./lib/server-handshake"
 import MessageBus from "./lib/bus"
 import server from "./lib/server"
+import { DBusError, DBusInterface } from "./lib/introspect"
 
 function createStream(opts) {
   if (opts.stream) return opts.stream
@@ -152,6 +153,7 @@ export function sessionBus(opts) {
 export const messageType = constants.messageType
 export { createConnection }
 export const createServer = server.createServer
+export { DBusError, DBusInterface }
 
 export default {
   createClient,
@@ -160,4 +162,6 @@ export default {
   messageType,
   createConnection,
   createServer,
+  DBusError,
+  DBusInterface,
 }

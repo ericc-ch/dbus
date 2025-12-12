@@ -3,16 +3,29 @@ import { Socket } from "net"
 
 export { DBusTypeCode, SignatureNode, parseSignature } from "./lib/signature"
 
+// Re-export from introspect.ts
+export {
+  DBusError,
+  DBusInterface,
+  DBusMethodInfo,
+  DBusPropertyInfo,
+  DBusSignalInfo,
+  DBusCallback,
+  SignalHandler,
+  IntrospectResult,
+  introspectBus,
+  introspectBusAsync,
+  processXML,
+  processXMLAsync,
+} from "./lib/introspect"
+
 export function systemBus(): MessageBus
 
 export class MessageBus {
   connection: BusConnection
   public invoke(
-    message: any,
-    callback: (
-      error: { name: string; message: any } | undefined,
-      value: any,
-    ) => void,
+    message: DBusMessage,
+    callback: (error: DBusError | undefined, value: unknown) => void,
   ): void
   public getService(name: string): DBusService
 }
@@ -38,10 +51,18 @@ export class DBusService {
 export class DBusObject {
   public name: string
   public service: DBusService
-  public as(name: string): DBusInterface
+  public proxy: Map<string, DBusInterface>
+  public nodes: string[]
+  public as(name: string): DBusInterface | undefined
 }
 
-export class DBusInterface extends EventEmitter implements Record<string, any> {
-  public $parent: DBusObject
-  public $name: string // string interface name
+export interface DBusMessage {
+  destination?: string
+  path?: string
+  interface?: string
+  member?: string
+  signature?: string
+  body?: unknown[]
 }
+
+import type { DBusError, DBusInterface } from "./lib/introspect"
